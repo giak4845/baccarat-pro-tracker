@@ -56,10 +56,12 @@
       let txt = `Người chơi: ${stats.player} (${((stats.player/total)*100 || 0).toFixed(1)}%) | 
                  Nhà cái: ${stats.banker} (${((stats.banker/total)*100 || 0).toFixed(1)}%) | 
                  Hòa: ${stats.tie} (${((stats.tie/total)*100 || 0).toFixed(1)}%) | 
-                 Tổng: ${total}`;
+                 Tổng số ván: ${total}`;
       document.getElementById("stats").innerText = txt;
 
+      // luôn luôn cập nhật gợi ý
       document.getElementById("suggestion").innerText = suggestNext();
+
       drawChart();
     }
 
@@ -81,15 +83,19 @@
     }
 
     function suggestNext() {
-      if (history.length < 3) return "👉 Chưa đủ dữ liệu để gợi ý";
+      let total = history.length;
+      if (total === 0) return "👉 Chưa có dữ liệu để gợi ý";
 
       let last3 = history.slice(-3);
-      if (last3.every(r => r === "Nhà cái")) return "👉 Gợi ý: Nhà cái (theo chuỗi)";
-      if (last3.every(r => r === "Người chơi")) return "👉 Gợi ý: Người chơi (theo chuỗi)";
 
+      // Gợi ý theo chuỗi gần nhất
+      if (last3.every(r => r === "Nhà cái")) return "👉 Gợi ý: Nhà cái (chuỗi 3 gần nhất)";
+      if (last3.every(r => r === "Người chơi")) return "👉 Gợi ý: Người chơi (chuỗi 3 gần nhất)";
+
+      // Nếu không có chuỗi, gợi ý theo tỷ lệ tổng thể
       if (stats.banker > stats.player) return "👉 Gợi ý: Nhà cái (tỷ lệ cao hơn)";
       if (stats.player > stats.banker) return "👉 Gợi ý: Người chơi (tỷ lệ cao hơn)";
-      return "👉 Gợi ý: Cân bằng, có thể Hòa";
+      return "👉 Gợi ý: Có thể Hòa hoặc cân bằng";
     }
 
     function resetAll() {
