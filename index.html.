@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baccarat Pro Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f8f9fa; margin: 20px; }
+    h1 { color: darkblue; }
+    .btn { padding: 10px 20px; margin: 5px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px; }
+    .banker { background: red; color: white; }
+    .player { background: blue; color: white; }
+    .tie { background: green; color: white; }
+    #history, #stats { margin-top: 20px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>Baccarat Pro Tracker</h1>
+  <p>Chọn kết quả ván chơi:</p>
+  <button class="btn banker" onclick="addResult('B')">Banker</button>
+  <button class="btn player" onclick="addResult('P')">Player</button>
+  <button class="btn tie" onclick="addResult('T')">Tie</button>
+  <button class="btn" style="background: gray; color:white;" onclick="resetGame()">Reset</button>
+
+  <div id="history"></div>
+  <div id="stats"></div>
+
+  <script>
+    let results = [];
+
+    function addResult(result) {
+      results.push(result);
+      displayHistory();
+      displayStats();
+    }
+
+    function displayHistory() {
+      let text = results.map(r => {
+        if (r === 'B') return '🔴 Banker';
+        if (r === 'P') return '🔵 Player';
+        if (r === 'T') return '🟢 Tie';
+      }).join(' → ');
+      document.getElementById("history").innerHTML = "<b>Lịch sử:</b><br>" + text;
+    }
+
+    function displayStats() {
+      let total = results.length;
+      if (total === 0) {
+        document.getElementById("stats").innerHTML = "";
+        return;
+      }
+      let banker = results.filter(r => r === 'B').length;
+      let player = results.filter(r => r === 'P').length;
+      let tie = results.filter(r => r === 'T').length;
+
+      let bankerPct = ((banker / total) * 100).toFixed(1);
+      let playerPct = ((player / total) * 100).toFixed(1);
+      let tiePct = ((tie / total) * 100).toFixed(1);
+
+      document.getElementById("stats").innerHTML =
+        `<b>Thống kê:</b><br>
+         🔴 Banker: ${banker} (${bankerPct}%)<br>
+         🔵 Player: ${player} (${playerPct}%)<br>
+         🟢 Tie: ${tie} (${tiePct}%)<br>
+         Tổng số ván: ${total}`;
+    }
+
+    function resetGame() {
+      results = [];
+      document.getElementById("history").innerHTML = "";
+      document.getElementById("stats").innerHTML = "";
+    }
+  </script>
+</body>
+</html>
