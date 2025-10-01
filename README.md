@@ -26,6 +26,7 @@
     .player { background: #27ae60; }
     .banker { background: #c0392b; }
     .tie { background: #8e44ad; }
+    .reset { background: #7f8c8d; }
     table {
       margin: 20px auto;
       border-collapse: collapse;
@@ -39,6 +40,11 @@
       background: #34495e;
       color: white;
     }
+    .stats {
+      margin-top: 30px;
+      font-size: 18px;
+      color: #2c3e50;
+    }
   </style>
 </head>
 <body>
@@ -48,6 +54,7 @@
   <button class="player" onclick="addResult('Người chơi')">Người chơi thắng</button>
   <button class="banker" onclick="addResult('Nhà cái')">Nhà cái thắng</button>
   <button class="tie" onclick="addResult('Hòa')">Hòa</button>
+  <button class="reset" onclick="resetGame()">Reset</button>
 
   <table id="resultsTable">
     <tr>
@@ -56,8 +63,15 @@
     </tr>
   </table>
 
+  <div class="stats" id="stats">
+    <p>Người chơi: 0 | Nhà cái: 0 | Hòa: 0</p>
+    <p>Tổng số ván: 0</p>
+  </div>
+
   <script>
     let round = 0;
+    let stats = { player: 0, banker: 0, tie: 0 };
+
     function addResult(result) {
       round++;
       let table = document.getElementById("resultsTable");
@@ -66,6 +80,32 @@
       let cell2 = row.insertCell(1);
       cell1.innerHTML = round;
       cell2.innerHTML = result;
+
+      if (result === "Người chơi") stats.player++;
+      else if (result === "Nhà cái") stats.banker++;
+      else stats.tie++;
+
+      updateStats();
+    }
+
+    function updateStats() {
+      let total = stats.player + stats.banker + stats.tie;
+      document.getElementById("stats").innerHTML = `
+        <p>Người chơi: ${stats.player} | Nhà cái: ${stats.banker} | Hòa: ${stats.tie}</p>
+        <p>Tổng số ván: ${total}</p>
+        <p>Tỷ lệ thắng - Người chơi: ${(stats.player/total*100).toFixed(1)}% | 
+        Nhà cái: ${(stats.banker/total*100).toFixed(1)}% | 
+        Hòa: ${(stats.tie/total*100).toFixed(1)}%</p>
+      `;
+    }
+
+    function resetGame() {
+      round = 0;
+      stats = { player: 0, banker: 0, tie: 0 };
+      document.getElementById("resultsTable").innerHTML = `
+        <tr><th>Ván</th><th>Kết quả</th></tr>
+      `;
+      updateStats();
     }
   </script>
 </body>
