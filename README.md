@@ -2,25 +2,30 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Baccarat VIP+ Tracker</title>
+  <title>Baccarat VIP++</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background:#101820; color:#fff; }
+    body { font-family: Arial, sans-serif; background:#0d0d0d; color:#fff; text-align:center; }
     h1 { color:#ffd700; }
-    button { margin:5px; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
+    button { margin:5px; padding:10px 18px; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
     .player { background:#3498db; color:white; }
     .banker { background:#e74c3c; color:white; }
     .tie { background:#2ecc71; color:white; }
     .reset { background:#7f8c8d; color:white; }
-    table { margin:20px auto; border-collapse: collapse; width:80%; background:#1e272e; }
-    th, td { border:1px solid #555; padding:6px; text-align:center; }
-    th { background:#273c75; }
+    table { margin:20px auto; border-collapse: collapse; background:#1e1e1e; }
+    th, td { border:1px solid #444; padding:5px; text-align:center; }
+    th { background:#333; }
     #stats, #suggestion { margin:20px; font-size:18px; }
-    canvas { background:#fff; margin:20px auto; padding:10px; border-radius:10px; }
+    .roadmap, .beadplate { display:inline-block; margin:10px; }
+    .cell { width:30px; height:30px; border:1px solid #555; display:inline-block; margin:1px; border-radius:50%; }
+    .bankerCell { background:#e74c3c; }
+    .playerCell { background:#3498db; }
+    .tieCell { background:#2ecc71; }
   </style>
 </head>
 <body>
-  <h1>🎲 Baccarat VIP+ Tracker 🎲</h1>
+  <h1>🎲 Baccarat VIP++ Tracker 🎲</h1>
+
   <div>
     <button class="player" onclick="recordResult('Người chơi')">Người chơi</button>
     <button class="banker" onclick="recordResult('Nhà cái')">Nhà cái</button>
@@ -36,9 +41,12 @@
   <div id="stats"></div>
   <div id="suggestion"></div>
 
-  <h2>📊 Biểu đồ phân tích</h2>
+  <h2>📊 Roadmap Baccarat</h2>
+  <div class="roadmap" id="bigRoad"></div>
+  <div class="beadplate" id="beadPlate"></div>
+
+  <h2>📈 Biểu đồ thống kê</h2>
   <canvas id="pieChart" width="400" height="400"></canvas>
-  <canvas id="lineChart" width="600" height="300"></canvas>
 
 <script>
 let history = [];
@@ -54,9 +62,7 @@ function loadData(){
   let s = localStorage.getItem("baccaratStats");
   if(h) history = JSON.parse(h);
   if(s) stats = JSON.parse(s);
-  updateTable();
-  updateStats();
-  updateCharts();
+  updateAll();
 }
 
 function recordResult(result) {
@@ -64,10 +70,16 @@ function recordResult(result) {
   if (result==="Người chơi") stats.player++;
   else if (result==="Nhà cái") stats.banker++;
   else stats.tie++;
+  updateAll();
+  saveData();
+}
+
+function updateAll(){
   updateTable();
   updateStats();
   updateCharts();
-  saveData();
+  drawBigRoad();
+  drawBeadPlate();
 }
 
 function updateTable(){
@@ -118,36 +130,75 @@ function suggestNext(){
 
 function resetAll(){
   history=[]; stats={player:0, banker:0, tie:0};
-  updateTable(); updateStats(); updateCharts();
+  updateAll();
   localStorage.removeItem("baccaratHistory");
   localStorage.removeItem("baccaratStats");
 }
 
-let pieChart, lineChart;
+let pieChart;
 function updateCharts(){
-  let ctx1=document.getElementById("pieChart").getContext("2d");
-  let ctx2=document.getElementById("lineChart").getContext("2d");
+  let ctx=document.getElementById("pieChart").getContext("2d");
   if(pieChart) pieChart.destroy();
-  if(lineChart) lineChart.destroy();
-
-  pieChart=new Chart(ctx1,{type:'pie',
+  pieChart=new Chart(ctx,{type:'pie',
     data:{labels:['Người chơi','Nhà cái','Hòa'],
     datasets:[{data:[stats.player,stats.banker,stats.tie],
-    backgroundColor:['#3498db','#e74c3c','#2ecc71']}]}});
-
-  lineChart=new Chart(ctx2,{type:'line',
-    data:{labels:history.map((_,i)=>i+1),
-    datasets:[{label:'Người chơi',data:history.map(r=>r==="Người chơi"?1:0),
-              borderColor:'#3498db',fill:false},
-             {label:'Nhà cái',data:history.map(r=>r==="Nhà cái"?1:0),
-              borderColor:'#e74c3c',fill:false},
-             {label:'Hòa',data:history.map(r=>r==="Hòa"?1:0),
-              borderColor:'#2ecc71',fill:false}]},
-    options:{scales:{y:{beginAtZero:true,max:1}}}});
+    backgroundColor:['#3498db','#e74c3c','#2ecc71']}]}})
 }
 
-// load dữ liệu khi mở lại trang
-window.onload = loadData;
+// Vẽ Big Road (6 hàng, xuống khi cùng kết quả, sang cột khi đổi)
+function drawBigRoad(){
+  let container=document.getElementById("bigRoad");
+  container.innerHTML="";
+  let cols=[]; let currentCol=[];
+  history.forEach((r,i)=>{
+    if(i===0 || r===history[i-1]){
+      currentCol.push(r);
+    } else {
+      cols.push(currentCol);
+      currentCol=[r];
+    }
+  });
+  if(currentCol.length) cols.push(currentCol);
+
+  cols.forEach((col,colIndex)=>{
+    let div=document.createElement("div");
+    div.style.display="inline-block";
+    div.style.verticalAlign="top";
+    for(let row=0; row<6; row++){
+      let cell=document.createElement("div");
+      cell.className="cell";
+      if(col[row]==="Nhà cái") cell.classList.add("bankerCell");
+      if(col[row]==="Người chơi") cell.classList.add("playerCell");
+      if(col[row]==="Hòa") cell.classList.add("tieCell");
+      div.appendChild(cell);
+    }
+    container.appendChild(div);
+  });
+}
+
+// Vẽ Bead Plate (grid 6xN)
+function drawBeadPlate(){
+  let container=document.getElementById("beadPlate");
+  container.innerHTML="";
+  let cols=Math.ceil(history.length/6);
+  for(let c=0;c<cols;c++){
+    let div=document.createElement("div");
+    div.style.display="inline-block";
+    div.style.verticalAlign="top";
+    for(let r=0;r<6;r++){
+      let cell=document.createElement("div");
+      cell.className="cell";
+      let index=c*6+r;
+      if(history[index]==="Nhà cái") cell.classList.add("bankerCell");
+      if(history[index]==="Người chơi") cell.classList.add("playerCell");
+      if(history[index]==="Hòa") cell.classList.add("tieCell");
+      div.appendChild(cell);
+    }
+    container.appendChild(div);
+  }
+}
+
+window.onload=loadData;
 </script>
 </body>
 </html>
