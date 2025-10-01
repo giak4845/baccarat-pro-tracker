@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Baccarat VIP Tracker</title>
+  <title>Baccarat VIP+ Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background:#101820; color:#fff; }
@@ -20,7 +20,7 @@
   </style>
 </head>
 <body>
-  <h1>🎲 Baccarat VIP Tracker 🎲</h1>
+  <h1>🎲 Baccarat VIP+ Tracker 🎲</h1>
   <div>
     <button class="player" onclick="recordResult('Người chơi')">Người chơi</button>
     <button class="banker" onclick="recordResult('Nhà cái')">Nhà cái</button>
@@ -44,6 +44,21 @@
 let history = [];
 let stats = { player:0, banker:0, tie:0 };
 
+function saveData(){
+  localStorage.setItem("baccaratHistory", JSON.stringify(history));
+  localStorage.setItem("baccaratStats", JSON.stringify(stats));
+}
+
+function loadData(){
+  let h = localStorage.getItem("baccaratHistory");
+  let s = localStorage.getItem("baccaratStats");
+  if(h) history = JSON.parse(h);
+  if(s) stats = JSON.parse(s);
+  updateTable();
+  updateStats();
+  updateCharts();
+}
+
 function recordResult(result) {
   history.push(result);
   if (result==="Người chơi") stats.player++;
@@ -52,6 +67,7 @@ function recordResult(result) {
   updateTable();
   updateStats();
   updateCharts();
+  saveData();
 }
 
 function updateTable(){
@@ -91,11 +107,9 @@ function suggestNext(){
   let pattern=detectPattern();
   if(pattern) return "👉 Gợi ý: theo " + pattern;
 
-  // Nếu không có cầu thì dựa vào thống kê
   if(stats.banker>stats.player) return "👉 Gợi ý: Nhà cái (tỷ lệ cao hơn)";
   if(stats.player>stats.banker) return "👉 Gợi ý: Người chơi (tỷ lệ cao hơn)";
 
-  // Nếu hòa thì random giả lập
   let sim=Math.random();
   if(sim<0.45) return "👉 Gợi ý: Người chơi (ngẫu nhiên)";
   else if(sim<0.9) return "👉 Gợi ý: Nhà cái (ngẫu nhiên)";
@@ -105,6 +119,8 @@ function suggestNext(){
 function resetAll(){
   history=[]; stats={player:0, banker:0, tie:0};
   updateTable(); updateStats(); updateCharts();
+  localStorage.removeItem("baccaratHistory");
+  localStorage.removeItem("baccaratStats");
 }
 
 let pieChart, lineChart;
@@ -129,6 +145,9 @@ function updateCharts(){
               borderColor:'#2ecc71',fill:false}]},
     options:{scales:{y:{beginAtZero:true,max:1}}}});
 }
+
+// load dữ liệu khi mở lại trang
+window.onload = loadData;
 </script>
 </body>
 </html>
