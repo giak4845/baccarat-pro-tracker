@@ -2,25 +2,26 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Phân tích Baccarat</title>
+  <title>Baccarat VIP Analyzer</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #f4f6f9; margin: 20px; }
-    h1 { color: #2c3e50; }
-    button { padding: 10px 20px; margin: 5px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
+    body { font-family: Arial, sans-serif; text-align: center; background: #111; color: #fff; margin: 20px; }
+    h1 { color: #f1c40f; }
+    button { padding: 12px 20px; margin: 6px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
     .player { background: #3498db; color: white; }
     .banker { background: #e74c3c; color: white; }
     .tie { background: #2ecc71; color: white; }
     .reset { background: #7f8c8d; color: white; }
-    table { margin: 20px auto; border-collapse: collapse; width: 80%; }
-    table, th, td { border: 1px solid #ccc; padding: 8px; }
-    th { background: #eee; }
-    #suggestion { font-weight: bold; margin-top: 20px; font-size: 18px; color: #8e44ad; }
+    table { margin: 20px auto; border-collapse: collapse; width: 85%; background: #222; }
+    table, th, td { border: 1px solid #555; padding: 8px; }
+    th { background: #333; }
+    #suggestion { font-weight: bold; margin-top: 20px; font-size: 20px; color: #f39c12; }
+    #confidence { font-size: 16px; color: #1abc9c; }
     canvas { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h1>📊 Phân tích Baccarat</h1>
+  <h1>🔮 Baccarat VIP Analyzer</h1>
 
   <div>
     <button class="player" onclick="recordResult('Người chơi')">Người chơi</button>
@@ -37,6 +38,7 @@
   <h2>Thống kê</h2>
   <p id="stats"></p>
   <div id="suggestion">👉 Gợi ý sẽ hiển thị ở đây</div>
+  <div id="confidence"></div>
 
   <canvas id="resultChart" width="400" height="200"></canvas>
 
@@ -59,8 +61,8 @@
                  Tổng số ván: ${total}`;
       document.getElementById("stats").innerText = txt;
 
-      // luôn luôn cập nhật gợi ý
-      document.getElementById("suggestion").innerText = suggestNext();
+      document.getElementById("suggestion").innerText = suggestNext().text;
+      document.getElementById("confidence").innerText = "Độ tin cậy: " + suggestNext().confidence + "%";
 
       drawChart();
     }
@@ -84,18 +86,30 @@
 
     function suggestNext() {
       let total = history.length;
-      if (total === 0) return "👉 Chưa có dữ liệu để gợi ý";
+      if (total === 0) return { text: "👉 Chưa có dữ liệu để gợi ý", confidence: 0 };
 
       let last3 = history.slice(-3);
+      let last5 = history.slice(-5);
 
-      // Gợi ý theo chuỗi gần nhất
-      if (last3.every(r => r === "Nhà cái")) return "👉 Gợi ý: Nhà cái (chuỗi 3 gần nhất)";
-      if (last3.every(r => r === "Người chơi")) return "👉 Gợi ý: Người chơi (chuỗi 3 gần nhất)";
+      // Gợi ý theo chuỗi 3 gần nhất
+      if (last3.length === 3) {
+        if (last3.every(r => r === "Nhà cái")) return { text: "👉 Gợi ý: Nhà cái (chuỗi 3 gần nhất)", confidence: 85 };
+        if (last3.every(r => r === "Người chơi")) return { text: "👉 Gợi ý: Người chơi (chuỗi 3 gần nhất)", confidence: 85 };
+      }
 
-      // Nếu không có chuỗi, gợi ý theo tỷ lệ tổng thể
-      if (stats.banker > stats.player) return "👉 Gợi ý: Nhà cái (tỷ lệ cao hơn)";
-      if (stats.player > stats.banker) return "👉 Gợi ý: Người chơi (tỷ lệ cao hơn)";
-      return "👉 Gợi ý: Có thể Hòa hoặc cân bằng";
+      // Gợi ý theo xu hướng 5 ván gần nhất
+      if (last5.length === 5) {
+        let p = last5.filter(r => r === "Người chơi").length;
+        let b = last5.filter(r => r === "Nhà cái").length;
+        if (b >= 3) return { text: "👉 Gợi ý: Nhà cái (xu hướng 5 ván gần nhất)", confidence: 75 };
+        if (p >= 3) return { text: "👉 Gợi ý: Người chơi (xu hướng 5 ván gần nhất)", confidence: 75 };
+      }
+
+      // Nếu không rõ xu hướng → gợi ý theo tỷ lệ tổng thể
+      if (stats.banker > stats.player) return { text: "👉 Gợi ý: Nhà cái (tỷ lệ tổng thể)", confidence: 65 };
+      if (stats.player > stats.banker) return { text: "👉 Gợi ý: Người chơi (tỷ lệ tổng thể)", confidence: 65 };
+
+      return { text: "👉 Gợi ý: Có thể Hòa hoặc cân bằng", confidence: 50 };
     }
 
     function resetAll() {
